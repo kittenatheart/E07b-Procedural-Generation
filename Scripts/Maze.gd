@@ -25,7 +25,38 @@ func _ready():
 
 
 func check_neighbors(cell, unvisited):
-	pass
+	var list = []
+	for n in cell_walls.keys():
+		if cell + n in unvisited:
+			list.append(cell + n)
+	return list
 
 func make_maze():
-	pass
+#set up maze
+	var unvisited = []
+	var stack = []
+	Map.clear()
+	for x in range(width):
+		for y in range(height):
+			unvisited.append(Vector2(x,y))
+			Map.set_cellv(Vector2(x,y), N|E|S|W)
+	var current = Vector2(0,0)
+	unvisited.erase(current)
+#begin cycling through
+	while unvisited:
+		var neighbors = check_neighbors(current, unvisited)
+		if neighbors.size() > 0:
+			var next = neighbors[randi() % neighbors.size()]
+			stack.append(current)
+			#removing walls from both cells
+			var dir = next - current
+			var current_walls = Map.get_cellv(current) - cell_walls[dir]
+			var next_walls = Map.get_cellv(next) - cell_walls[-dir]
+			Map.set_cellv(current, current_walls)
+			Map.set_cellv(next, next_walls)
+			current = next
+			unvisited.erase(current)
+		elif stack:
+			#backtrack if no neighbors
+			current = stack.pop_back()
+		yield(get_tree(), 'idle_frame')
